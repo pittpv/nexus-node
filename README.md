@@ -1,9 +1,10 @@
 # 🛰️ Nexus Node Setup with Docker Compose, Watchtower & Telegram Alerts
 
 > ⚠️ **Prerequisite:**
-> Make sure you have **Docker** and **Docker Compose** installed on your system.
-> You can install Docker from the official website or using your package manager.
+> Make sure **Docker** and **Docker Compose** are installed on your system.
+> You can follow [this guide to install Docker and dependencies](https://github.com/pittpv/sepolia-auto-install/blob/main/en/Install-Dependecies.md) if you don't have it installed yet.
 
+---
 
 ## 📁 Step 1: Create Nexus Directory
 
@@ -17,11 +18,20 @@ mkdir nexus && cd nexus
 docker pull nexusxyz/nexus-cli:latest
 ```
 
-## 📄 Step 3: Create `docker-compose.yml` for Nexus
+---
 
-Inside the `nexus/` directory, create the following file:
+## 🔍 Step 3: Obtain Your Node ID
 
-### `docker-compose.yml`
+1. [Open the Nexus web app](https://app.nexus.xyz/nodes) in your browser and Sign in.
+2. Click **Add Node** → **Add CLI node**.
+3. Copy your **Node ID** – it will look like a long alphanumeric string.
+4. You will use this `NODE_ID` in the next step.
+
+---
+
+## 📄 Step 4: Create `docker-compose.yml` for Nexus
+
+Inside the `nexus/` directory, create:
 
 ```yaml
 services:
@@ -37,21 +47,17 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 ```
 
-> 🔁 Replace `NODE_ID` with your actual node identifier.
+> 🔁 Replace `NODE_ID` with the ID you copied in Step 3.
 
 ---
 
-## 📁 Step 4: Create Watchtower Directory
+## 📁 Step 5: Create Watchtower Directory
 
 ```bash
 mkdir ../watchtower && cd ../watchtower
 ```
 
-## 📄 Step 5: Create `docker-compose.yml` for Watchtower
-
-Inside the `watchtower/` directory, create:
-
-### `docker-compose.yml`
+## 📄 Step 6: Create `docker-compose.yml` for Watchtower
 
 ```yaml
 services:
@@ -70,11 +76,11 @@ services:
       - WATCHTOWER_LABEL_ENABLE=true
 ```
 
-> 🛡️ Replace `TG_TOKEN` and `TG_CHAT_ID` with your **Telegram bot token** and **chat ID** respectively.
+> 🛡️ Replace `TG_TOKEN` and `TG_CHAT_ID` with your **Telegram bot token** and **chat ID**.
 
 ---
 
-## 🚀 Step 6: Launch Both Containers
+## 🚀 Step 7: Launch Both Containers
 
 From each folder (`nexus/` and `watchtower/`), run:
 
@@ -87,15 +93,18 @@ docker compose up -d
 ## 🔧 Useful Docker Commands
 
 ```bash
-# View running containers
+# Show running containers
 docker ps -a
 
-# View container
+# Show watchtower logs
+docker logs -f watchtower
+
+# View nexus container 
 docker attach nexus
 
-# Exit from viewer
+#Exit from container viewer
 Ctrl+P then Ctrl+Q
-You wıll see response `read escape sequence`
+You will see response: `read escape sequence`
 
 # Restart a container
 docker restart nexus
@@ -103,7 +112,7 @@ docker restart nexus
 # Stop and remove containers
 docker compose down
 
-# Rebuild containers
+# Recreate containers
 docker compose up -d
 ```
 
@@ -114,7 +123,7 @@ docker compose up -d
 Your Nexus node is now:
 
 * Running via Docker Compose
-* Automatically updated with Watchtower
+* Automatically updated via Watchtower
 * Sending update notifications to Telegram
 
-Stay synced and updated effortlessly 🚀
+Enjoy smooth and reliable operation! 🚀
