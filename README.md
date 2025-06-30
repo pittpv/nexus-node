@@ -127,3 +127,8 @@ Your Nexus node is now:
 * Sending update notifications to Telegram
 
 Enjoy smooth and reliable operation! 🚀
+
+---
+
+If you have any questions, feel free to reach out to me on the **Nexus Discord server** by mentioning **@pittpv**.
+Here’s the invite link: [https://discord.gg/yCg6b7W7Zd](https://discord.gg/yCg6b7W7Zd)
