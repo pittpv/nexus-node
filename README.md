@@ -54,7 +54,7 @@ services:
 ## 📁 Step 5: Create Watchtower Directory
 
 ```bash
-mkdir ../watchtower && cd ../watchtower
+mkdir watchtower && cd watchtower
 ```
 
 ## 📄 Step 6: Create `docker-compose.yml` for Watchtower
