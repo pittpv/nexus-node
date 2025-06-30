@@ -132,3 +132,4 @@ Enjoy smooth and reliable operation! 🚀
 
 If you have any questions, feel free to reach out to me on the **Nexus Discord server** by mentioning **@pittpv**.
 Here’s the invite link: [https://discord.gg/yCg6b7W7Zd](https://discord.gg/yCg6b7W7Zd)
+Official docs: [https://docs.nexus.xyz/layer-1/testnet/testnet-3](https://docs.nexus.xyz/layer-1/testnet/testnet-3)
