@@ -4,7 +4,6 @@
 > Make sure you have **Docker** and **Docker Compose** installed on your system.
 > You can install Docker from the official website or using your package manager.
 
----
 
 ## 📁 Step 1: Create Nexus Directory
 
