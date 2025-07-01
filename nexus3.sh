@@ -31,7 +31,7 @@ print_menu() {
 show_logo() {
     echo -e " "
     echo -e " "
-    echo -e "${NC}$(t "welcome")${NC}"
+    echo -e "${NC}Welcome to the Nexus Node Setup Script${NC}"
     curl -s https://raw.githubusercontent.com/pittpv/nexus-node/refs/heads/main/other/logo.sh | bash
 }
 
