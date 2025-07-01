@@ -64,39 +64,45 @@ prompt_node_config() {
     read -r NODE_ID
   done
 
-  echo -n "Enter your Telegram Bot Token (TG_TOKEN): "
-  read -r TG_TOKEN
-  while [[ -z "$TG_TOKEN" ]]; do
-    echo -n "TG_TOKEN cannot be empty. Enter again: "
+  while true; do
+    echo -n "Enter your Telegram Bot Token (TG_TOKEN): "
     read -r TG_TOKEN
+    if [[ -z "$TG_TOKEN" ]]; then
+      echo "TG_TOKEN cannot be empty."
+      continue
+    fi
+
+    # Check token with dummy chat_id
+    response=$(curl -s -X GET "https://api.telegram.org/bot$TG_TOKEN/getMe")
+    if echo "$response" | grep -q '"ok":true'; then
+      echo -e "${GREEN}TG_TOKEN is valid.${NC}"
+      break
+    else
+      echo -e "${RED}❌ Invalid TG_TOKEN. Try again.${NC}"
+    fi
   done
 
-  echo -n "Enter your Telegram Chat ID (TG_CHAT_ID): "
-  read -r TG_CHAT_ID
-  while [[ -z "$TG_CHAT_ID" ]]; do
-    echo -n "TG_CHAT_ID cannot be empty. Enter again: "
+  while true; do
+    echo -n "Enter your Telegram Chat ID (TG_CHAT_ID): "
     read -r TG_CHAT_ID
+    if [[ -z "$TG_CHAT_ID" ]]; then
+      echo "TG_CHAT_ID cannot be empty."
+      continue
+    fi
+
+    # Try sending test message
+    test_message="Nexus Watchtower test message"
+    response=$(curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+      -d chat_id="$TG_CHAT_ID" \
+      -d text="$test_message")
+
+    if echo "$response" | grep -q '"ok":true'; then
+      echo -e "${GREEN}TG_CHAT_ID is valid.${NC}"
+      break
+    else
+      echo -e "${RED}❌ Invalid TG_CHAT_ID. Try again.${NC}"
+    fi
   done
-
-  validate_telegram_config
-}
-
-validate_telegram_config() {
-  echo -e "${GREEN}Validating Telegram token and chat ID...${NC}"
-  local test_message="Nexus Watchtower test message"
-  local response
-  response=$(curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
-    -d chat_id="$TG_CHAT_ID" \
-    -d text="$test_message")
-
-  if echo "$response" | grep -q '"ok":true'; then
-    echo -e "${GREEN}Telegram credentials are valid.${NC}"
-  else
-    echo -e "${RED}❌ Invalid Telegram token or chat ID.${NC}"
-    echo "Response: $response"
-    echo "Please try again."
-    prompt_node_config
-  fi
 }
 
 install_nexus_node() {
