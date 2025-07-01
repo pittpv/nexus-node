@@ -29,6 +29,21 @@ The script will:
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
+## 📌 Latest Updates 01-07-2025  
+**Improvements:**
+- After exiting the container view, the terminal is cleared and returns to the menu.
+- When deleting a node, there is an additional prompt to delete Watchtower (can be skipped if it's used by other containers).
+- Watchtower container is removed from Stop/Start—the command now only applies to the node container.
+
+<details>
+<summary>📅 Version History</summary>
+
+### 30-06-2025  
+- Added a function to view the node container
+- Minor improvements
+
+</details>
+
 ---
 
 ## ⚙️ Option 2: Manual Setup
