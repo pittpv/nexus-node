@@ -20,10 +20,10 @@ print_menu() {
   echo -e "${YELLOW}========= Nexus Node Menu =========${NC}"
   echo "1) Install Docker (latest)"
   echo "2) Install Nexus Node and Watchtower"
-  echo "${RED}3) Remove Nexus Node and Watchtower${NC}"
+  echo -e "${RED}3) Remove Nexus Node and Watchtower${NC}"
   echo "4) Stop containers (docker compose down)"
   echo "5) Start containers (docker compose up -d)"
-  echo "${RED}0) Exit${NC}"
+  echo -e "${RED}0) Exit${NC}"
   echo -e "${YELLOW}===================================${NC}"
   echo -n "Choose an option: "
 }
