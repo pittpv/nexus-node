@@ -20,13 +20,15 @@ print_menu() {
   echo -e "${YELLOW}========= Nexus Node Menu =========${NC}"
   echo "1) Install Docker (latest)"
   echo "2) Install Nexus Node and Watchtower"
-  echo -e "${RED}3) Remove Nexus Node and Watchtower${NC}"
-  echo "4) Stop containers (docker compose down)"
-  echo "5) Start containers (docker compose up -d)"
+  echo "3) Attach to Nexus container (docker attach nexus)"
+  echo -e "${RED}4) Remove Nexus Node and Watchtower${NC}"
+  echo "5) Stop containers (docker compose down)"
+  echo "6) Start containers (docker compose up -d)"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${YELLOW}===================================${NC}"
   echo -n "Choose an option: "
 }
+
 
 show_logo() {
     echo -e " "
@@ -173,7 +175,21 @@ install_node_and_watchtower() {
   prompt_node_config
   install_nexus_node
   install_watchtower
-  echo -e "${GREEN}Setup complete. Use option 5 to start containers.${NC}"
+
+  echo -e "${GREEN}Starting Nexus and Watchtower containers...${NC}"
+  if [ -f "$NEXUS_DIR/docker-compose.yml" ]; then
+    (cd "$NEXUS_DIR" && docker compose up -d)
+  else
+    echo "Nexus docker-compose.yml not found, cannot start Nexus container."
+  fi
+
+  if [ -f "$WATCHTOWER_DIR/docker-compose.yml" ]; then
+    (cd "$WATCHTOWER_DIR" && docker compose up -d)
+  else
+    echo "Watchtower docker-compose.yml not found, cannot start Watchtower container."
+  fi
+
+  echo -e "${GREEN}Setup and start complete.${NC}"
 }
 
 remove_node_and_watchtower() {
@@ -196,6 +212,14 @@ start_containers() {
   [ -f "$WATCHTOWER_DIR/docker-compose.yml" ] && (cd "$WATCHTOWER_DIR" && docker compose up -d) || echo "Watchtower not installed."
 }
 
+attach_nexus_container() {
+  echo -e "${YELLOW}You are about to attach to the 'nexus' container.${NC}"
+  echo "To exit the container view, press Ctrl+P then Ctrl+Q."
+  echo "Starting in 7 seconds..."
+  sleep 7
+  docker attach nexus
+}
+
 # Main loop
 while true; do
   print_menu
@@ -203,10 +227,12 @@ while true; do
   case $choice in
     1) install_docker ;;
     2) install_node_and_watchtower ;;
-    3) remove_node_and_watchtower ;;
-    4) stop_containers ;;
-    5) start_containers ;;
+    3) attach_nexus_container ;;
+    4) remove_node_and_watchtower ;;
+    5) stop_containers ;;
+    6) start_containers ;;
     0) echo "Exiting..."; exit 0 ;;
-    *) echo "Invalid input. Choose between 0 and 5." ;;
+    *) echo "Invalid input. Choose between 0 and 6." ;;
   esac
+
 done
