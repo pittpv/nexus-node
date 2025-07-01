@@ -9,7 +9,7 @@ v='\033[0;35m'
 
 # Функция подсветки "█" блоков
 function print_colored() {
-  echo "${b}$(echo "$1" | sed -E "s/(█+)/${y}\1${b}/g")${r}"
+  echo "${b}$(echo "$1" | sed -E "s/(█+)/${b}\1${b}/g")${r}"
 }
 
 echo

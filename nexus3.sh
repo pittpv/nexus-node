@@ -17,7 +17,7 @@ TG_CHAT_ID=""
 print_menu() {
   show_logo
   echo ""
-  echo -e "${YELLOW}========= Nexus Node Menu =========${NC}"
+  echo -e "${NC}========= Nexus Node Menu =========${NC}"
   echo "1) Install Docker (latest)"
   echo "2) Install Nexus Node and Watchtower"
   echo "3) Attach to Nexus container (docker attach nexus)"
@@ -25,7 +25,7 @@ print_menu() {
   echo "5) Stop containers (docker compose down)"
   echo "6) Start containers (docker compose up -d)"
   echo -e "${RED}0) Exit${NC}"
-  echo -e "${YELLOW}===================================${NC}"
+  echo -e "${NC}===================================${NC}"
   echo -n "Choose an option: "
 }
 
