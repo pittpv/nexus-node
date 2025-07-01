@@ -93,7 +93,7 @@ prompt_node_config() {
     fi
 
     # Try sending test message
-    test_message="Nexus Watchtower test message"
+    test_message="Nexus - Watchtower connected"
     response=$(curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
       -d chat_id="$TG_CHAT_ID" \
       -d text="$test_message")
