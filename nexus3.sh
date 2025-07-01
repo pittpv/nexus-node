@@ -21,7 +21,7 @@ print_menu() {
   echo "1) Install Docker (latest)"
   echo "2) Install Nexus Node and Watchtower"
   echo "3) Attach to Nexus container (view logs)"
-  echo -e "${RED}4) Remove Nexus Node and Watchtower${NC}"
+  echo -e "${RED}4) Remove Nexus Node${NC}"
   echo "5) Stop containers (docker compose down)"
   echo "6) Start containers (docker compose up -d)"
   echo -e "${RED}0) Exit${NC}"
@@ -192,12 +192,11 @@ install_node_and_watchtower() {
   echo -e "${GREEN}Setup and start complete.${NC}"
 }
 
-remove_node_and_watchtower() {
-  echo -e "${YELLOW}Removing Nexus Node and Watchtower...${NC}"
+remove_node() {
+  echo -e "${YELLOW}Removing Nexus Node...${NC}"
   [ -d "$NEXUS_DIR" ] && (cd "$NEXUS_DIR" && docker compose down -v) || echo "Nexus not found."
-  [ -d "$WATCHTOWER_DIR" ] && (cd "$WATCHTOWER_DIR" && docker compose down -v) || echo "Watchtower not found."
-  rm -rf "$NEXUS_DIR" "$WATCHTOWER_DIR"
-  echo -e "${GREEN}All removed.${NC}"
+  rm -rf "$NEXUS_DIR"
+  echo -e "${GREEN}Nexus Node removed.${NC}"
 }
 
 stop_containers() {
@@ -228,7 +227,7 @@ while true; do
     1) install_docker ;;
     2) install_node_and_watchtower ;;
     3) attach_nexus_container ;;
-    4) remove_node_and_watchtower ;;
+    4) remove_node ;;
     5) stop_containers ;;
     6) start_containers ;;
     0) echo "Exiting..."; exit 0 ;;
