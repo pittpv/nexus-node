@@ -22,8 +22,8 @@ print_menu() {
   echo "2) Install Nexus Node and Watchtower"
   echo "3) Attach to Nexus container (view logs)"
   echo -e "${RED}4) Remove Nexus Node${NC}"
-  echo "5) Stop containers (docker compose down)"
-  echo "6) Start containers (docker compose up -d)"
+  echo "5) Stop node container (docker compose down)"
+  echo "6) Start node container (docker compose up -d)"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${NC}===================================${NC}"
   echo -n "Choose an option: "
@@ -194,21 +194,36 @@ install_node_and_watchtower() {
 
 remove_node() {
   echo -e "${YELLOW}Removing Nexus Node...${NC}"
-  [ -d "$NEXUS_DIR" ] && (cd "$NEXUS_DIR" && docker compose down -v) || echo "Nexus not found."
-  rm -rf "$NEXUS_DIR"
-  echo -e "${GREEN}Nexus Node removed.${NC}"
+  if [ -d "$NEXUS_DIR" ]; then
+    (cd "$NEXUS_DIR" && docker compose down -v)
+    rm -rf "$NEXUS_DIR"
+    echo -e "${GREEN}Nexus Node removed.${NC}"
+  else
+    echo "Nexus Node not found."
+  fi
+
+  # Запрос подтверждения удаления Watchtower
+  if [ -d "$WATCHTOWER_DIR" ]; then
+    echo -n "Do you also want to remove Watchtower? [y/N]: "
+    read -r confirm
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+      (cd "$WATCHTOWER_DIR" && docker compose down -v)
+      rm -rf "$WATCHTOWER_DIR"
+      echo -e "${GREEN}Watchtower removed.${NC}"
+    else
+      echo "Watchtower was not removed."
+    fi
+  fi
 }
 
 stop_containers() {
-  echo -e "${YELLOW}Stopping containers...${NC}"
+  echo -e "${YELLOW}Stopping container...${NC}"
   [ -f "$NEXUS_DIR/docker-compose.yml" ] && (cd "$NEXUS_DIR" && docker compose down)
-  [ -f "$WATCHTOWER_DIR/docker-compose.yml" ] && (cd "$WATCHTOWER_DIR" && docker compose down)
 }
 
 start_containers() {
-  echo -e "${GREEN}Starting containers...${NC}"
+  echo -e "${GREEN}Starting container...${NC}"
   [ -f "$NEXUS_DIR/docker-compose.yml" ] && (cd "$NEXUS_DIR" && docker compose up -d) || echo "Nexus not installed."
-  [ -f "$WATCHTOWER_DIR/docker-compose.yml" ] && (cd "$WATCHTOWER_DIR" && docker compose up -d) || echo "Watchtower not installed."
 }
 
 attach_nexus_container() {
@@ -216,7 +231,13 @@ attach_nexus_container() {
   echo "To exit the container view, press Ctrl+P then Ctrl+Q."
   echo "Starting in 7 seconds..."
   sleep 7
+
+  set +e
   docker attach nexus
+  set -e
+
+  clear
+  echo -e "${GREEN}Returned from container. Back to menu.${NC}"
 }
 
 # Main loop

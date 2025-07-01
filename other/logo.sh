@@ -48,7 +48,7 @@ for line in "${info_lines[@]}"; do
   clean_line=$(echo "$line" | sed -E 's/\x1B\[[0-9;]*[mK]//g')
   line_length=$(echo -n "$clean_line" | wc -m)
   padding=$((max_len - line_length))
-  printf "${c}║ ${v}%s%*s ${c}║\n" "$line" "$padding" ""
+  printf "${b}║ ${v}%s%*s ${b}║\n" "$line" "$padding" ""
 done
 echo -e "${b}${bottom_border}${r}"
 echo
