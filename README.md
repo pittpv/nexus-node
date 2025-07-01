@@ -6,10 +6,16 @@ You can choose **automatic installation via script** or **manual setup**.
 
 ## ⚡️ Option 1: Automatic Installation (Recommended)
 
-Just run this one-liner in your terminal:
+Just run this one-liner in your terminal (first install or update):
 
 ```bash
 curl -o nexus3.sh https://raw.githubusercontent.com/pittpv/nexus-node/refs/heads/main/nexus3.sh && chmod +x nexus3.sh && ./nexus3.sh
+```
+
+For future runs:
+
+```bash
+cd $HOME && ./nexus3.sh
 ```
 
 The script will:
