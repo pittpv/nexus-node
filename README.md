@@ -181,6 +181,7 @@ docker compose up -d
 ### 1. `permission denied while trying to connect to the Docker daemon socket` on WSL
 
 **Cause:** Your user is not part of the `docker` group.
+
 **Solution:**
 Run the following command and restart the terminal (WSL):
 
@@ -209,7 +210,9 @@ You can do both using **option 7** and **option 8** in the script.
 Your Nexus node is now:
 
 ✅ Running via Docker Compose
+
 ✅ Automatically updated via Watchtower
+
 ✅ Sending update notifications to Telegram
 
 Enjoy smooth and reliable operation! 🚀
