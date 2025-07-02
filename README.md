@@ -193,14 +193,14 @@ sudo usermod -aG docker $USER
 ### 2. Nexus container keeps restarting
 
 **Cause:** Not enough RAM available. Nexus requires a lot of memory to run reliably — even 30 GB may be insufficient.
-**Solution:**
 
+**Solution:**
 * Run the node on a machine with more available memory.
 * Partial workaround:
-
   * Create a swap file
   * Increase `ulimit` limits
-    You can do both using **option 7** and **option 8** in the script.
+
+You can do both using **option 7** and **option 8** in the script.
 
 ---
 
