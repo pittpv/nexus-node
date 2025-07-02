@@ -29,14 +29,22 @@ The script will:
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
-## 📌 Latest Updates 01-07-2025  
+## 📌 Latest Updates 02-07-2025  
+- Added the function of creating and deleting a swap file. 
+  - You can create a file of 8, 16, 32 GB.
+  - It will show if the file already exists and its size.
+- Added the function of increasing ulimit (file descriptor limit)
+  - Increases for the current session to a maximum value of 65535
+  - Shows the previous limit
+
+<details>
+<summary>📅 Version History</summary>
+
+### 01-07-2025  
 **Improvements:**
 - After exiting the container view, the terminal is cleared and returns to the menu.
 - When deleting a node, there is an additional prompt to delete Watchtower (can be skipped if it's used by other containers).
 - Watchtower container is removed from Stop/Start—the command now only applies to the node container.
-
-<details>
-<summary>📅 Version History</summary>
 
 ### 30-06-2025  
 - Added a function to view the node container
@@ -168,6 +176,34 @@ docker compose up -d
 
 ---
 
+## 🛠️ Troubleshooting
+
+### 1. `permission denied while trying to connect to the Docker daemon socket` on WSL
+
+**Cause:** Your user is not part of the `docker` group.
+**Solution:**
+Run the following command and restart the terminal (WSL):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+---
+
+### 2. Nexus container keeps restarting
+
+**Cause:** Not enough RAM available. Nexus requires a lot of memory to run reliably — even 30 GB may be insufficient.
+**Solution:**
+
+* Run the node on a machine with more available memory.
+* Partial workaround:
+
+  * Create a swap file
+  * Increase `ulimit` limits
+    You can do both using **option 7** and **option 8** in the script.
+
+---
+
 ## ✅ Done!
 
 Your Nexus node is now:
@@ -184,3 +220,4 @@ If you have any questions, feel free to reach out to me on the **Nexus Discord s
 Here’s the invite link: [https://discord.gg/yCg6b7W7Zd](https://discord.gg/yCg6b7W7Zd)
 
 Official docs: [https://docs.nexus.xyz/layer-1/testnet/testnet-3](https://docs.nexus.xyz/layer-1/testnet/testnet-3)
+

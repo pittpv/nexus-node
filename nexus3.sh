@@ -24,6 +24,8 @@ print_menu() {
   echo -e "${RED}4) Remove Nexus Node${NC}"
   echo "5) Stop node container (docker compose down)"
   echo "6) Start node container (docker compose up -d)"
+  echo "7) Create or delete Swap File (if you have low RAM)"
+  echo "8) Increase file descriptor limit (for current session)"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${NC}===================================${NC}"
   echo -n "Choose an option: "
@@ -240,6 +242,83 @@ attach_nexus_container() {
   echo -e "${GREEN}Returned from container. Back to menu.${NC}"
 }
 
+create_swap() {
+  echo ""
+
+  # Проверка на существующий swap-файл
+  if swapon --show | grep -q '^/swapfile'; then
+    SWAP_ACTIVE=true
+    SWAP_SIZE=$(swapon --show --bytes | awk '/\/swapfile/ { printf "%.0f", $3 / 1024 / 1024 }')
+    echo -e "${YELLOW}Active swap file found: /swapfile (${SWAP_SIZE} MB)${NC}"
+  else
+    SWAP_ACTIVE=false
+    echo -e "${YELLOW}No active swap file found.${NC}"
+  fi
+
+  echo -e "${NC}---------- Swap File Menu ----------"
+  echo "1) Create 8GB Swap File"
+  echo "2) Create 16GB Swap File"
+  echo "3) Create 32GB Swap File"
+  echo "4) Remove existing Swap File"
+  echo -e "${RED}0) Back to main menu${NC}"
+  echo -e "${NC}------------------------------------"
+  echo -n "Choose an option: "
+  read -r swap_choice
+
+  case $swap_choice in
+    1)
+      SWAP_SIZE_MB=8192
+      ;;
+    2)
+      SWAP_SIZE_MB=16384
+      ;;
+    3)
+      SWAP_SIZE_MB=32768
+      ;;
+    4)
+      if [ "$SWAP_ACTIVE" = true ]; then
+        sudo swapoff /swapfile && sudo rm -f /swapfile
+        sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
+        echo -e "${GREEN}Swap file removed successfully.${NC}"
+      else
+        echo -e "${RED}No active swap file found or removal failed.${NC}"
+      fi
+      return
+      ;;
+    0)
+      return
+      ;;
+    *)
+      echo -e "${RED}Invalid option. Returning to menu.${NC}"
+      return
+      ;;
+  esac
+
+  echo -e "${GREEN}Creating ${SWAP_SIZE_MB}MB swap file...${NC}"
+  sudo dd if=/dev/zero of=/swapfile bs=1M count=$SWAP_SIZE_MB status=progress
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+
+  if ! grep -q '/swapfile none swap sw 0 0' /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+  fi
+
+  echo -e "${GREEN}Swap file of size ${SWAP_SIZE_MB}MB created and activated.${NC}"
+}
+
+increase_ulimit() {
+  echo -e "${YELLOW}Increasing file descriptor limit for current session...${NC}"
+  OLD_LIMIT=$(ulimit -n)
+  echo -e "Current limit: ${GREEN}${OLD_LIMIT}${NC}"
+
+  # Попытка установить 65535 (или максимально допустимое значение)
+  ulimit -n 65535 2>/dev/null
+
+  NEW_LIMIT=$(ulimit -n)
+  echo -e "New limit: ${GREEN}${NEW_LIMIT}${NC}"
+}
+
 # Main loop
 while true; do
   print_menu
@@ -251,6 +330,8 @@ while true; do
     4) remove_node ;;
     5) stop_containers ;;
     6) start_containers ;;
+    7) create_swap ;;
+    8) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
     *) echo "Invalid input. Choose between 0 and 6." ;;
   esac
