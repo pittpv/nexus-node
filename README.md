@@ -30,9 +30,11 @@ The script will:
 > If Watchtower is already configured, the script will ask before overwriting.
 
 ## 📌 Latest Updates 03-07-2025  
+- Added multi-thread support `--max-threads` to node installation function (**for powerful machines**)
+  - Value is saved to .env file
+- Added automatic download of latest Nexus image and Watchtower during node installation
 - Added a Docker installation check before setting up the node (for users who are unsure whether Docker is installed on their system).  
-- Improved the swap file creation and removal function:  
-  - If swap file activation is not configured in the system (**relevant for WSL**), the swap file will **not remain active after rebooting the PC or restarting WSL**. The script will detect this (if you run **Option 7** again after a reboot) and **prompt you to configure swap file activation**.  
+- Enhanced the create/delete swap file function for compatibility with both WSL and standard Ubuntu.  
 
 <details>
 <summary>📅 Version History</summary>

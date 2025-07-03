@@ -113,11 +113,27 @@ install_nexus_node() {
   echo -e "${GREEN}Setting up Nexus Node...${NC}"
   mkdir -p "$NEXUS_DIR"
 
+  echo -e "${YELLOW}Pulling latest Nexus image...${NC}"
+  docker pull nexusxyz/nexus-cli:latest
+
+  # Запрос количества потоков
+  echo -n "Enter number of threads for Nexus Node [1-8, default 1]: "
+  read -r THREADS
+
+  # Проверка и установка значения
+  if [[ ! "$THREADS" =~ ^[1-8]$ ]]; then
+    THREADS=1
+    echo -e "${YELLOW}Invalid or empty input. Using default: 1 thread.${NC}"
+  else
+    echo -e "${GREEN}Using $THREADS thread(s).${NC}"
+  fi
+
   # .env file
   cat > "$NEXUS_DIR/.env" <<EOF
 NODE_ID=$NODE_ID
 TG_TOKEN=$TG_TOKEN
 TG_CHAT_ID=$TG_CHAT_ID
+MAX_THREADS=$THREADS
 EOF
 
   # docker-compose.yml
@@ -128,7 +144,7 @@ services:
     restart: unless-stopped
     image: nexusxyz/nexus-cli:latest
     init: true
-    command: start --node-id \${NODE_ID}
+    command: start --node-id \${NODE_ID} --max-threads \${MAX_THREADS}
     stdin_open: true
     tty: true
     env_file:
@@ -144,6 +160,9 @@ install_watchtower() {
   echo -e "${GREEN}Setting up Watchtower...${NC}"
   mkdir -p "$WATCHTOWER_DIR"
 
+  echo -e "${YELLOW}Pulling latest Watchtower image...${NC}"
+  docker pull containrrr/watchtower:latest
+
   if [ -f "$WATCHTOWER_DIR/docker-compose.yml" ]; then
     echo -n "Watchtower config already exists. Overwrite it? [y/n]: "
     read -r overwrite
@@ -156,7 +175,7 @@ install_watchtower() {
   cat > "$WATCHTOWER_DIR/docker-compose.yml" <<EOF
 services:
   watchtower:
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
     volumes:
@@ -253,6 +272,113 @@ attach_nexus_container() {
   echo -e "${GREEN}Returned from container. Back to menu.${NC}"
 }
 
+# create_swap() {
+  # echo ""
+
+  # # Проверка на активный swap-файл
+  # if swapon --show | grep -q '^/swapfile'; then
+    # SWAP_ACTIVE=true
+    # SWAP_SIZE=$(swapon --show --bytes | awk '/\/swapfile/ { printf "%.0f", $3 / 1024 / 1024 }')
+    # echo -e "${YELLOW}Active swap file found: /swapfile (${SWAP_SIZE} MB)${NC}"
+  # else
+    # SWAP_ACTIVE=false
+    # echo -e "${YELLOW}No active swap file found.${NC}"
+
+    # # Проверка на существование неактивного файла
+    # if [ -f /swapfile ]; then
+      # SWAP_INACTIVE_SIZE=$(ls -lh /swapfile | awk '{print $5}')
+      # echo -e "${YELLOW}Inactive swap file exists at /swapfile (${SWAP_INACTIVE_SIZE}).${NC}"
+
+      # echo -n "Do you want to enable it at WSL startup? [y/N]: "
+      # read -r enable_choice
+      # if [[ "$enable_choice" =~ ^[Yy]$ ]]; then
+        # if ! grep -q 'command *= *"swapon /swapfile"' /etc/wsl.conf 2>/dev/null; then
+          # echo -e "${GREEN}Adding activation command to /etc/wsl.conf...${NC}"
+          # sudo mkdir -p /etc 2>/dev/null
+          # if ! grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then
+            # echo -e "\n[boot]" | sudo tee -a /etc/wsl.conf > /dev/null
+          # fi
+          # echo 'command = "swapon /swapfile"' | sudo tee -a /etc/wsl.conf > /dev/null
+        # else
+          # echo -e "${YELLOW}Activation command already present in /etc/wsl.conf.${NC}"
+        # fi
+		# echo " "
+        # echo -e "${NC}To apply changes${NC}"
+		# echo -e "\n${YELLOW}1. Exit from script by option 0${NC}"
+		# echo -e "${YELLOW}2. Then exit from Ubuntu wsl by command ${GREEN}exit${NC}"
+		# echo -e "${YELLOW}3. Then run command: ${GREEN}wsl --shutdown${NC}"
+		# echo -e "${YELLOW}And finally come back to wsl${NC}"
+	    # echo -e "\n${NC}We'll return to the main menu in 10 seconds...${NC}"
+		# sleep 10
+        # return
+      # else
+        # echo -n "Do you want to remove the inactive swap file? [y/N]: "
+        # read -r remove_choice
+        # if [[ "$remove_choice" =~ ^[Yy]$ ]]; then
+          # sudo rm -f /swapfile
+          # sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
+          # echo -e "${GREEN}Inactive swap file removed.${NC}"
+        # else
+          # echo -e "${YELLOW}Swap file was not removed.${NC}"
+        # fi
+        # return
+      # fi
+    # fi
+  # fi
+
+  # echo -e "${NC}---------- Swap File Menu ----------"
+  # echo "1) Create 8GB Swap File"
+  # echo "2) Create 16GB Swap File"
+  # echo "3) Create 32GB Swap File"
+  # echo "4) Remove existing Swap File"
+  # echo -e "${RED}0) Back to main menu${NC}"
+  # echo -e "${NC}------------------------------------"
+  # echo -n "Choose an option: "
+  # read -r swap_choice
+
+  # case $swap_choice in
+    # 1)
+      # SWAP_SIZE_MB=8192
+      # ;;
+    # 2)
+      # SWAP_SIZE_MB=16384
+      # ;;
+    # 3)
+      # SWAP_SIZE_MB=32768
+      # ;;
+    # 4)
+      # if [ "$SWAP_ACTIVE" = true ] || [ -f /swapfile ]; then
+        # sudo swapoff /swapfile 2>/dev/null
+        # sudo rm -f /swapfile
+        # sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
+        # echo -e "${GREEN}Swap file removed successfully.${NC}"
+      # else
+        # echo -e "${RED}No swap file found or removal failed.${NC}"
+      # fi
+      # return
+      # ;;
+    # 0)
+      # return
+      # ;;
+    # *)
+      # echo -e "${RED}Invalid option. Returning to menu.${NC}"
+      # return
+      # ;;
+  # esac
+
+  # echo -e "${GREEN}Creating ${SWAP_SIZE_MB}MB swap file...${NC}"
+  # sudo dd if=/dev/zero of=/swapfile bs=1M count=$SWAP_SIZE_MB status=progress
+  # sudo chmod 600 /swapfile
+  # sudo mkswap /swapfile
+  # sudo swapon /swapfile
+
+  # if ! grep -q '/swapfile none swap sw 0 0' /etc/fstab; then
+    # echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+  # fi
+
+  # echo -e "${GREEN}Swap file of size ${SWAP_SIZE_MB}MB created and activated.${NC}"
+# }
+
 create_swap() {
   echo ""
 
@@ -270,34 +396,53 @@ create_swap() {
       SWAP_INACTIVE_SIZE=$(ls -lh /swapfile | awk '{print $5}')
       echo -e "${YELLOW}Inactive swap file exists at /swapfile (${SWAP_INACTIVE_SIZE}).${NC}"
 
-      echo -n "Do you want to enable it at WSL startup? [y/N]: "
-      read -r enable_choice
-      if [[ "$enable_choice" =~ ^[Yy]$ ]]; then
-        if ! grep -q 'command *= *"swapon /swapfile"' /etc/wsl.conf 2>/dev/null; then
-          echo -e "${GREEN}Adding activation command to /etc/wsl.conf...${NC}"
-          sudo mkdir -p /etc 2>/dev/null
-          if ! grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then
-            echo -e "\n[boot]" | sudo tee -a /etc/wsl.conf > /dev/null
+      echo -n "Do you want to activate it now? [y/N]: "
+      read -r activate_choice
+      if [[ "$activate_choice" =~ ^[Yy]$ ]]; then
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        echo -e "${GREEN}Swap file activated.${NC}"
+
+        if grep -i -q microsoft /proc/version; then
+          # WSL
+          echo -n "Enable swap activation at WSL startup via /etc/wsl.conf? [y/N]: "
+          read -r wsl_startup
+          if [[ "$wsl_startup" =~ ^[Yy]$ ]]; then
+            sudo mkdir -p /etc
+            if ! grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then
+              echo -e "\n[boot]" | sudo tee -a /etc/wsl.conf > /dev/null
+            fi
+            if ! grep -q 'swapon /swapfile' /etc/wsl.conf 2>/dev/null; then
+              echo 'command = "swapon /swapfile"' | sudo tee -a /etc/wsl.conf > /dev/null
+              echo -e "${GREEN}Activation command added to /etc/wsl.conf.${NC}"
+            else
+              echo -e "${YELLOW}Activation command already present in /etc/wsl.conf.${NC}"
+            fi
+            echo " "
+            echo -e "${NC}To apply changes:${NC}"
+            echo -e "${YELLOW}1. Exit script (option 0)"
+            echo -e "2. Run: ${GREEN}wsl --shutdown${YELLOW} in PowerShell or CMD"
+            echo -e "3. Restart WSL${NC}"
+            echo -e "${YELLOW}Returning to menu in 10 seconds...${NC}"
+            sleep 10
+            return
           fi
-          echo 'command = "swapon /swapfile"' | sudo tee -a /etc/wsl.conf > /dev/null
         else
-          echo -e "${YELLOW}Activation command already present in /etc/wsl.conf.${NC}"
+          # Серверная Ubuntu
+          if ! grep -q '/swapfile' /etc/fstab; then
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+            echo -e "${GREEN}Added swap activation to /etc/fstab.${NC}"
+          else
+            echo -e "${YELLOW}Swap already listed in /etc/fstab.${NC}"
+          fi
         fi
-		echo " "
-        echo -e "${NC}To apply changes${NC}"
-		echo -e "\n${YELLOW}1. Exit from script by option 0${NC}"
-		echo -e "${YELLOW}2. Then exit from Ubuntu wsl by command ${GREEN}exit${NC}"
-		echo -e "${YELLOW}3. Then run command: ${GREEN}wsl --shutdown${NC}"
-		echo -e "${YELLOW}And finally come back to wsl${NC}"
-	    echo -e "\n${NC}We'll return to the main menu in 10 seconds...${NC}"
-		sleep 10
         return
       else
         echo -n "Do you want to remove the inactive swap file? [y/N]: "
         read -r remove_choice
         if [[ "$remove_choice" =~ ^[Yy]$ ]]; then
           sudo rm -f /swapfile
-          sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
+          sudo sed -i '/\/swapfile/d' /etc/fstab
           echo -e "${GREEN}Inactive swap file removed.${NC}"
         else
           echo -e "${YELLOW}Swap file was not removed.${NC}"
@@ -318,33 +463,56 @@ create_swap() {
   read -r swap_choice
 
   case $swap_choice in
-    1)
-      SWAP_SIZE_MB=8192
-      ;;
-    2)
-      SWAP_SIZE_MB=16384
-      ;;
-    3)
-      SWAP_SIZE_MB=32768
-      ;;
+    1) SWAP_SIZE_MB=8192 ;;
+    2) SWAP_SIZE_MB=16384 ;;
+    3) SWAP_SIZE_MB=32768 ;;
     4)
-      if [ "$SWAP_ACTIVE" = true ] || [ -f /swapfile ]; then
-        sudo swapoff /swapfile 2>/dev/null
-        sudo rm -f /swapfile
-        sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
-        echo -e "${GREEN}Swap file removed successfully.${NC}"
-      else
-        echo -e "${RED}No swap file found or removal failed.${NC}"
-      fi
-      return
-      ;;
-    0)
-      return
-      ;;
-    *)
-      echo -e "${RED}Invalid option. Returning to menu.${NC}"
-      return
-      ;;
+	  # Определяем активный swap-файл (если есть)
+	  SWAP_FILE=$(swapon --show --noheadings --raw | awk '$1 ~ /^\// {print $1}' | head -n1)
+
+	  if [ -z "$SWAP_FILE" ]; then
+		echo -e "${RED}❌ No active swap file found.${NC}"
+		return
+	  fi
+
+	  echo -e "${YELLOW}Detected active swap file: ${SWAP_FILE}${NC}"
+
+	  # Попытка отключить
+	  echo -e "${YELLOW}Deactivating swap file...${NC}"
+	  if ! sudo swapoff "$SWAP_FILE"; then
+		echo -e "${RED}❌ Failed to deactivate swap. It might be system-managed or locked.${NC}"
+		return
+	  fi
+
+	  # Проверка, что это обычный файл, и он существует
+	  if [ -f "$SWAP_FILE" ] && stat -c %F "$SWAP_FILE" | grep -q 'regular file'; then
+		echo -e "${YELLOW}Removing swap file...${NC}"
+		sudo rm -f "$SWAP_FILE"
+
+		# Удаление из /etc/fstab
+		if grep -q "$SWAP_FILE" /etc/fstab 2>/dev/null; then
+		  sudo sed -i "\|$SWAP_FILE|d" /etc/fstab
+		  echo -e "${GREEN}Removed swap entry from /etc/fstab.${NC}"
+		fi
+
+		# Если WSL — удаляем из /etc/wsl.conf
+		if grep -qi microsoft /proc/version; then
+		  if grep -q "swapon $SWAP_FILE" /etc/wsl.conf 2>/dev/null; then
+			sudo sed -i "\|swapon $SWAP_FILE|d" /etc/wsl.conf
+			echo -e "${GREEN}Removed swap activation from /etc/wsl.conf.${NC}"
+		  fi
+		fi
+
+		echo -e "${GREEN}Swap file ${SWAP_FILE} removed successfully.${NC}"
+	  else
+		echo -e "${RED}❌ $SWAP_FILE is not a regular file or does not exist. Possibly system-managed swap.${NC}"
+		echo -e "${YELLOW}Can't delete swap.${NC}"
+	  fi
+
+	  return
+	  ;;
+    0) return ;;
+    *) echo -e "${RED}Invalid option. Returning to menu.${NC}"; return ;;
   esac
 
   echo -e "${GREEN}Creating ${SWAP_SIZE_MB}MB swap file...${NC}"
@@ -353,13 +521,19 @@ create_swap() {
   sudo mkswap /swapfile
   sudo swapon /swapfile
 
-  if ! grep -q '/swapfile none swap sw 0 0' /etc/fstab; then
-    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+  if grep -i -q microsoft /proc/version; then
+    # WSL
+    echo -e "${YELLOW}Running on WSL. Add swapon to /etc/wsl.conf manually or run option 7 after restart WSL.${NC}"
+  else
+    # Серверная Ubuntu
+    if ! grep -q '/swapfile' /etc/fstab; then
+      echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+      echo -e "${GREEN}Swap entry added to /etc/fstab.${NC}"
+    fi
   fi
 
   echo -e "${GREEN}Swap file of size ${SWAP_SIZE_MB}MB created and activated.${NC}"
 }
-
 
 increase_ulimit() {
   echo -e "${YELLOW}Increasing file descriptor limit for current session...${NC}"
@@ -385,7 +559,7 @@ while true; do
     5) stop_containers ;;
     6) start_containers ;;
     7) create_swap ;;
-	8) increase_ulimit ;;
+    8) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
     *) echo "Invalid input. Choose between 0 and 6." ;;
   esac
