@@ -29,16 +29,21 @@ The script will:
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
-## 📌 Latest Updates 02-07-2025  
+## 📌 Latest Updates 03-07-2025  
+- Added a Docker installation check before setting up the node (for users who are unsure whether Docker is installed on their system).  
+- Improved the swap file creation and removal function:  
+  - If swap file activation is not configured in the system (**relevant for WSL**), the swap file will **not remain active after rebooting the PC or restarting WSL**. The script will detect this (if you run **Option 7** again after a reboot) and **prompt you to configure swap file activation**.  
+
+<details>
+<summary>📅 Version History</summary>
+
+### 02-07-2025  
 - Added the function of creating and deleting a swap file. 
   - You can create a file of 8, 16, 32 GB.
   - It will show if the file already exists and its size.
 - Added the function of increasing ulimit (file descriptor limit)
   - Increases for the current session to a maximum value of 65535
   - Shows the previous limit
-
-<details>
-<summary>📅 Version History</summary>
 
 ### 01-07-2025  
 **Improvements:**

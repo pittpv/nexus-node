@@ -24,8 +24,8 @@ print_menu() {
   echo -e "${RED}4) Remove Nexus Node${NC}"
   echo "5) Stop node container (docker compose down)"
   echo "6) Start node container (docker compose up -d)"
-  echo "7) Create or delete Swap File (if you have low RAM)"
-  echo "8) Increase file descriptor limit (for current session)"
+  echo "7) Check, create or delete Swap File (if you have low RAM)"
+  echo "8) Increase file descriptor limit (only for current session)"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${NC}===================================${NC}"
   echo -n "Choose an option: "
@@ -173,7 +173,18 @@ EOF
   echo -e "${GREEN}Watchtower configuration created in $WATCHTOWER_DIR.${NC}"
 }
 
+check_docker_installed() {
+  if ! command -v docker &>/dev/null; then
+    echo -e "${RED}Docker is not installed.${NC}"
+    echo -e "${YELLOW}Please run option 1 in the main menu to install Docker first.${NC}"
+    return 1
+  fi
+  return 0
+}
+
 install_node_and_watchtower() {
+  check_docker_installed || return
+
   prompt_node_config
   install_nexus_node
   install_watchtower
@@ -245,7 +256,7 @@ attach_nexus_container() {
 create_swap() {
   echo ""
 
-  # Проверка на существующий swap-файл
+  # Проверка на активный swap-файл
   if swapon --show | grep -q '^/swapfile'; then
     SWAP_ACTIVE=true
     SWAP_SIZE=$(swapon --show --bytes | awk '/\/swapfile/ { printf "%.0f", $3 / 1024 / 1024 }')
@@ -253,6 +264,47 @@ create_swap() {
   else
     SWAP_ACTIVE=false
     echo -e "${YELLOW}No active swap file found.${NC}"
+
+    # Проверка на существование неактивного файла
+    if [ -f /swapfile ]; then
+      SWAP_INACTIVE_SIZE=$(ls -lh /swapfile | awk '{print $5}')
+      echo -e "${YELLOW}Inactive swap file exists at /swapfile (${SWAP_INACTIVE_SIZE}).${NC}"
+
+      echo -n "Do you want to enable it at WSL startup? [y/N]: "
+      read -r enable_choice
+      if [[ "$enable_choice" =~ ^[Yy]$ ]]; then
+        if ! grep -q 'command *= *"swapon /swapfile"' /etc/wsl.conf 2>/dev/null; then
+          echo -e "${GREEN}Adding activation command to /etc/wsl.conf...${NC}"
+          sudo mkdir -p /etc 2>/dev/null
+          if ! grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then
+            echo -e "\n[boot]" | sudo tee -a /etc/wsl.conf > /dev/null
+          fi
+          echo 'command = "swapon /swapfile"' | sudo tee -a /etc/wsl.conf > /dev/null
+        else
+          echo -e "${YELLOW}Activation command already present in /etc/wsl.conf.${NC}"
+        fi
+		echo " "
+        echo -e "${NC}To apply changes${NC}"
+		echo -e "\n${YELLOW}1. Exit from script by option 0${NC}"
+		echo -e "${YELLOW}2. Then exit from Ubuntu wsl by command ${GREEN}exit${NC}"
+		echo -e "${YELLOW}3. Then run command: ${GREEN}wsl --shutdown${NC}"
+		echo -e "${YELLOW}And finally come back to wsl${NC}"
+	    echo -e "\n${NC}We'll return to the main menu in 10 seconds...${NC}"
+		sleep 10
+        return
+      else
+        echo -n "Do you want to remove the inactive swap file? [y/N]: "
+        read -r remove_choice
+        if [[ "$remove_choice" =~ ^[Yy]$ ]]; then
+          sudo rm -f /swapfile
+          sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
+          echo -e "${GREEN}Inactive swap file removed.${NC}"
+        else
+          echo -e "${YELLOW}Swap file was not removed.${NC}"
+        fi
+        return
+      fi
+    fi
   fi
 
   echo -e "${NC}---------- Swap File Menu ----------"
@@ -276,12 +328,13 @@ create_swap() {
       SWAP_SIZE_MB=32768
       ;;
     4)
-      if [ "$SWAP_ACTIVE" = true ]; then
-        sudo swapoff /swapfile && sudo rm -f /swapfile
+      if [ "$SWAP_ACTIVE" = true ] || [ -f /swapfile ]; then
+        sudo swapoff /swapfile 2>/dev/null
+        sudo rm -f /swapfile
         sudo sed -i '/\/swapfile none swap sw 0 0/d' /etc/fstab
         echo -e "${GREEN}Swap file removed successfully.${NC}"
       else
-        echo -e "${RED}No active swap file found or removal failed.${NC}"
+        echo -e "${RED}No swap file found or removal failed.${NC}"
       fi
       return
       ;;
@@ -307,6 +360,7 @@ create_swap() {
   echo -e "${GREEN}Swap file of size ${SWAP_SIZE_MB}MB created and activated.${NC}"
 }
 
+
 increase_ulimit() {
   echo -e "${YELLOW}Increasing file descriptor limit for current session...${NC}"
   OLD_LIMIT=$(ulimit -n)
@@ -331,7 +385,7 @@ while true; do
     5) stop_containers ;;
     6) start_containers ;;
     7) create_swap ;;
-    8) increase_ulimit ;;
+	8) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
     *) echo "Invalid input. Choose between 0 and 6." ;;
   esac
