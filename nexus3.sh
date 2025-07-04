@@ -2,6 +2,8 @@
 
 set -e
 
+
+
 NEXUS_DIR="$HOME/nexus"
 WATCHTOWER_DIR="$HOME/watchtower"
 
@@ -18,14 +20,15 @@ print_menu() {
   show_logo
   echo ""
   echo -e "${NC}========= Nexus Node Menu =========${NC}"
-  echo "1) Install Docker (latest)"
-  echo "2) Install Nexus Node and Watchtower"
-  echo "3) Attach to Nexus container (view logs)"
-  echo -e "${RED}4) Remove Nexus Node${NC}"
-  echo "5) Stop node container (docker compose down)"
-  echo "6) Start node container (docker compose up -d)"
-  echo "7) Check, create or delete Swap File (if you have low RAM)"
-  echo "8) Increase file descriptor limit (only for current session)"
+  echo -e "${YELLOW}1) Check system resources${NC}"
+  echo "2) Install Docker (latest)"
+  echo "3) Install Nexus Node and Watchtower"
+  echo "4) Attach to Nexus container (view logs)"
+  echo -e "${RED}5) Remove Nexus Node${NC}"
+  echo "6) Stop node container (docker compose down)"
+  echo "7) Start node container (docker compose up -d)"
+  echo "8) Check, create or delete Swap File (if you have low RAM)"
+  echo "9) Increase file descriptor limit (only for current session)"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${NC}===================================${NC}"
   echo -n "Choose an option: "
@@ -416,7 +419,7 @@ create_swap() {
 
   if grep -i -q microsoft /proc/version; then
     # WSL
-    echo -e "${YELLOW}Running on WSL. Add swapon to /etc/wsl.conf manually or run option 7 after restart WSL.${NC}"
+    echo -e "${YELLOW}Running on WSL. Add swapon to /etc/wsl.conf manually if needed.${NC}"
   else
     # Серверная Ubuntu
     if ! grep -q '/swapfile' /etc/fstab; then
@@ -440,21 +443,88 @@ increase_ulimit() {
   echo -e "New limit: ${GREEN}${NEW_LIMIT}${NC}"
 }
 
+check_system_resources() {
+    # Configuration automatique des ressources (thanks for function to @leznoxx (discord))
+    TOTAL_RAM_GB=$(free -g | awk '/^Mem:/{print $2}')
+    TOTAL_CPU_CORES=$(nproc)
+    AVAILABLE_RAM_GB=$((TOTAL_RAM_GB - 2))  # Réserver 2GB pour le système
+    AVAILABLE_CPU_CORES=$((TOTAL_CPU_CORES - 1))  # Réserver 1 cœur pour le système
+
+    # Calcul optimal du nombre de nodes
+    MAX_NODES=$(( (AVAILABLE_RAM_GB / 4) < (AVAILABLE_CPU_CORES / 2) ? (AVAILABLE_RAM_GB / 4) : (AVAILABLE_CPU_CORES / 2) ))
+
+    # Limiter entre 1 et 8 nodes (максимум 8 вместо 10)
+    MAX_NODES=$(( MAX_NODES < 1 ? 1 : (MAX_NODES > 8 ? 8 : MAX_NODES) ))
+
+    # Calcul des CPUs par node (arrondi à 1 décimale)
+    CPUS_PER_NODE=$(awk -v avail="$AVAILABLE_CPU_CORES" -v max="$MAX_NODES" 'BEGIN{printf "%.1f", avail/max}')
+
+    echo -e "${BLUE}╔════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║    System Resources & Max Threads recommedation    ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${GREEN}💻 CPU Information:${NC}"
+    echo "  Model: $(lscpu | grep 'Model name' | sed 's/Model name: *//')"
+    echo "  Total cores: ${TOTAL_CPU_CORES}"
+    echo "  Available for node: ${AVAILABLE_CPU_CORES}"
+    echo ""
+    echo -e "${GREEN}🧠 Memory Information:${NC}"
+    echo "  Total RAM: ${TOTAL_RAM_GB}GB"
+    echo "  Available RAM: ${AVAILABLE_RAM_GB}GB"
+    echo "  Free RAM: $(free -h | awk '/^Mem:/{print $7}')"
+    echo ""
+    echo -e "${GREEN}💾 Storage Information:${NC}"
+    if grep -q "WSL" /proc/version 2>/dev/null; then
+        df -h /mnt/c | tail -n 1 | awk '{print "  Windows C: drive: " $2 " total, " $4 " available (" $5 " used)"}'
+    else
+        df -h / | tail -n 1 | awk '{print "  Root partition: " $2 " total, " $4 " available (" $5 " used)"}'
+    fi
+    echo ""
+    echo -e "${GREEN}🔄 Swap Information:${NC}"
+    if swapon --show | grep -q '/'; then
+        swapon --show --bytes | awk 'NR>1 { printf "  Swap file: %.1fGB\n", $3 / 1024 / 1024 / 1024 }'
+    else
+        echo "  No swap file configured"
+    fi
+    echo ""
+    echo -e "${GREEN}🐳 Docker Status:${NC}"
+    if command -v docker &>/dev/null; then
+        DOCKER_VERSION=$(docker --version | awk '{print $3}' | tr -d ',')
+        echo "  Docker is installed (version: $DOCKER_VERSION)"
+    else
+        echo "  Docker is not installed (you can install it using option 2)"
+    fi
+    echo ""
+    echo -e "${GREEN}📈 Optimal Configuration:${NC}"
+    echo "  Recommended max threads: ${MAX_NODES}"
+    echo "  CPU per thread: ${CPUS_PER_NODE} cores"
+    echo "  RAM per thread: ~4GB"
+
+    # Преобразуем CPUS_PER_NODE в целое число (отбрасываем дробную часть)
+    INT_CPUS_PER_NODE=${CPUS_PER_NODE%.*}
+    echo "  Total resources used: $((MAX_NODES * 4))GB RAM, $((MAX_NODES * INT_CPUS_PER_NODE)) CPU cores"
+    echo ""
+}
+
 # Main loop
 while true; do
   print_menu
   read -r choice
   case $choice in
-    1) install_docker ;;
-    2) install_node_and_watchtower ;;
-    3) attach_nexus_container ;;
-    4) remove_node ;;
-    5) stop_containers ;;
-    6) start_containers ;;
-    7) create_swap ;;
-    8) increase_ulimit ;;
+    1) check_system_resources ;;
+    2) install_docker ;;
+    3) install_node_and_watchtower ;;
+    4) attach_nexus_container ;;
+    5) remove_node ;;
+    6) stop_containers ;;
+    7) start_containers ;;
+    8) create_swap ;;
+    9) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
     *) echo "Invalid input. Choose between 0 and 6." ;;
   esac
+  echo ""
+  echo -e "${YELLOW}Press Enter to continue...${NC}"
+  read -r
 
 done

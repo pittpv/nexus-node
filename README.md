@@ -29,15 +29,20 @@ The script will:
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
-## 📌 Latest Updates 03-07-2025  
-- Added multi-thread support `--max-threads` to node installation function (**for powerful machines**)
-  - Value is saved to .env file
-- Added automatic download of latest Nexus image and Watchtower during node installation
-- Added a Docker installation check before setting up the node (for users who are unsure whether Docker is installed on their system).  
-- Enhanced the create/delete swap file function for compatibility with both WSL and standard Ubuntu.  
+## 📌 Latest Updates 04-07-2025  
+- Added a function to check machine resources and calculate recommended value for --max-threads parameter. Thanks to **@leznoxx** (Discord) for the function idea
+- Updated main menu order
+- Minor UX improvements
 
 <details>
 <summary>📅 Version History</summary>
+
+### 03-07-2025
+- Added multi-thread support `--max-threads` to node installation function (**for powerful machines**)
+  - Value is saved to .env file
+- Added automatic download of latest Nexus image and Watchtower during node installation
+- Added a Docker installation check before setting up the node (for users who are unsure whether Docker is installed on their system).
+- Enhanced the create/delete swap file function for compatibility with both WSL and standard Ubuntu.
 
 ### 02-07-2025  
 - Added the function of creating and deleting a swap file. 
