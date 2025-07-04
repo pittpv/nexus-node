@@ -460,7 +460,7 @@ check_system_resources() {
     CPUS_PER_NODE=$(awk -v avail="$AVAILABLE_CPU_CORES" -v max="$MAX_NODES" 'BEGIN{printf "%.1f", avail/max}')
 
     echo -e "${BLUE}╔════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║    System Resources & Max Threads recommedation    ║${NC}"
+    echo -e "${BLUE}║    System Resources & Max Threads recommendation   ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${GREEN}💻 CPU Information:${NC}"
