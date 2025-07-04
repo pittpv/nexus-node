@@ -521,7 +521,7 @@ while true; do
     8) create_swap ;;
     9) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
-    *) echo "Invalid input. Choose between 0 and 6." ;;
+    *) echo "Invalid input. Choose between 0 and 9." ;;
   esac
   echo ""
   echo -e "${YELLOW}Press Enter to continue...${NC}"
