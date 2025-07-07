@@ -1,4 +1,4 @@
-# 🛰️ Nexus Node Setup with Docker Compose, Watchtower & Telegram Alerts
+# 🛰️ Nexus Multi-Node Setup with Docker Compose, Watchtower & Telegram Alerts
 
 You can choose **automatic installation via script** or **manual setup**.
 
@@ -18,24 +18,41 @@ For future runs:
 cd $HOME && ./nexus3.sh
 ```
 
-The script will:
+When installing the node(s), the script will:
 
-* Ask for your `NODE_ID`, Telegram `TG_TOKEN`, and `TG_CHAT_ID`;
-* Validate your Telegram credentials;
-* Create separate `nexus/` and `watchtower/` directories in your `$HOME`;
+* Ask for your Telegram `TG_TOKEN`, `TG_CHAT_ID` and validate it;
+* Ask for batch `NODE_ID` upload or manual entry;
+* Create separate `nexus-nodes/` and `watchtower/` directories in your `$HOME`;
 * Set up `.env` and `docker-compose.yml` for Nexus;
-* Create a `docker-compose.yml` for Watchtower;
+* Set up `.env` and `docker-compose.yml` for Watchtower;
 * Let you start/stop/remove containers via an interactive menu.
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
-## 📌 Latest Updates 04-07-2025  
-- Added a function to check machine resources and calculate recommended value for --max-threads parameter. Thanks to **@leznoxx** (Discord) for the function idea
-- Updated main menu order
+## 📌 Latest Updates 07-07-2025  
+⚠️ Delete nodes using the **old version** of the script and only then download the new version.
+
+- Added support for creating multiple Nexus nodes
+  - Batch loading of node IDs via the `nexus-nodes.txt` file or manually
+  - `--max-threads` setting
+  - Convenient node identification on the server—the node ID is added to the container name and folder
+- Added batch node management
+  - Delete all nodes at once or a specific one
+  - Start/stop all containers at once or a specific one
+  - Check and display container status (running ✅, stopped ❌)
+- New log viewing mechanism based on tmux
+  - View up to 4 containers on one screen (in one session). The number of sessions is unlimited.
+  - Supports navigation between tmux sessions when dealing with more nodes. One tmux session = 4 containers.
+  - Convenient usage instructions displayed right before launching log viewing. Exit log viewing with `Ctrl+B` then `D`.
 - Minor UX improvements
 
 <details>
 <summary>📅 Version History</summary>
+
+### 04-07-2025
+- Added a function to check machine resources and calculate recommended value for --max-threads parameter. Thanks to **@leznoxx** (Discord) for the function idea
+- Updated main menu order
+- Minor UX improvements
 
 ### 03-07-2025
 - Added multi-thread support `--max-threads` to node installation function (**for powerful machines**)
