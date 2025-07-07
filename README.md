@@ -187,6 +187,12 @@ docker ps -a
 # Show watchtower logs
 docker logs -f watchtower
 
+# Show Nexus logs (for one node setup)
+docker attach nexus
+
+# Exit from container viewer (for one node setup)
+Ctrl+P then Ctrl+Q
+
 # tmux exit from container viewer
 Ctrl+B then D
 
