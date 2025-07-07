@@ -40,7 +40,7 @@ When installing the node(s), the script will:
   - Delete all nodes at once or a specific one
   - Start/stop all containers at once or a specific one
   - Check and display container status (running ✅, stopped ❌)
-- New log viewing mechanism based on tmux
+- New log viewing mechanism based on tmux. Thanks to **@leznoxx** (Discord) for the function idea
   - View up to 4 containers on one screen (in one session). The number of sessions is unlimited.
   - Supports navigation between tmux sessions when dealing with more nodes. One tmux session = 4 containers.
   - Convenient usage instructions displayed right before launching log viewing. Exit log viewing with `Ctrl+B` then `D`.
