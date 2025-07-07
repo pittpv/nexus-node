@@ -4,7 +4,7 @@ You can choose **automatic installation via script** or **manual setup**.
 
 ---
 
-## ⚡️ Option 1: Automatic Installation (Recommended)
+## ⚡️ Option 1: Automatic Installation (Recommended) - Supports Multiple Nodes
 
 Just run this one-liner in your terminal (first install or update):
 
@@ -83,7 +83,7 @@ When installing the node(s), the script will:
 
 ---
 
-## ⚙️ Option 2: Manual Setup
+## ⚙️ Option 2: Manual Setup - One node setup
 
 > ⚠️ **Prerequisite:**
 > Make sure **Docker** and **Docker Compose** are installed on your system.
