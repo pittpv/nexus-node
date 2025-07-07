@@ -187,11 +187,8 @@ docker ps -a
 # Show watchtower logs
 docker logs -f watchtower
 
-# View nexus container
-docker attach nexus
-
-# Exit from container viewer
-Ctrl+P then Ctrl+Q
+# tmux exit from container viewer
+Ctrl+B then D
 
 # Restart a container
 docker restart nexus
@@ -201,6 +198,7 @@ docker compose down
 
 # Recreate containers
 docker compose up -d
+
 ```
 
 ---
