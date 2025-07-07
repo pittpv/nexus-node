@@ -6,6 +6,8 @@ You can choose **automatic installation via script** or **manual setup**.
 
 ## ⚡️ Option 1: Automatic Installation (Recommended) - Supports Multiple Nodes
 
+![Nexus Multi-Node Setup](https://raw.githubusercontent.com/pittpv/nexus-node/refs/heads/main/other/img-2025-07-01-16-55-28.png)
+
 Just run this one-liner in your terminal (first install or update):
 
 ```bash
