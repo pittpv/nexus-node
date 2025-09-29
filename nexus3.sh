@@ -32,8 +32,9 @@ print_menu() {
   echo -e "${RED}5) Remove Nexus Node${NC}"
   echo "6) Stop Nexus Node container"
   echo "7) Start Nexus Node container"
-  echo "8) Check, create or delete Swap File"
-  echo "9) Increase file descriptor limit"
+  echo -e "${BLUE}8) Downgrade Node version${NC}"
+  echo "9) Check, create or delete Swap File"
+  echo "10) Increase file descriptor limit"
   echo -e "${RED}0) Exit${NC}"
   echo -e "${NC}=========================================${NC}"
   echo -n "Choose an option: "
@@ -323,6 +324,125 @@ remove_node() {
       echo -e "${YELLOW}Watchtower was not removed.${NC}"
     fi
   fi
+}
+
+downgrade_node() {
+  if ! select_node; then
+    return  # Возврат в меню при выборе 0 или если нет нод
+  fi
+
+  # Получаем список доступных образов с Docker Hub
+  echo -e "${YELLOW}Fetching available versions from Docker Hub...${NC}"
+
+  # Используем API Docker Hub для получения тегов
+  TAGS=$(curl -s "https://hub.docker.com/v2/repositories/nexusxyz/nexus-cli/tags/?page_size=20" | \
+          jq -r '.results[] | select(.name != "latest") | .name' | \
+          sort -Vr 2>/dev/null | head -10)
+
+  if [ -z "$TAGS" ]; then
+    # Fallback: если jq не работает или API недоступно
+    TAGS="latest 0.10.14 0.10.15"
+    echo -e "${YELLOW}Using fallback version list${NC}"
+  fi
+
+  # Добавляем опцию для ручного ввода версии
+  TAGS_ARRAY=($TAGS)
+  TAGS_ARRAY+=("custom" "latest")
+
+  echo -e "\n${BLUE}Available versions:${NC}"
+  for i in "${!TAGS_ARRAY[@]}"; do
+    if [ "${TAGS_ARRAY[$i]}" == "latest" ]; then
+      echo -e "  $((i+1))) ${GREEN}${TAGS_ARRAY[$i]}${NC} (current)"
+    else
+      echo -e "  $((i+1))) ${YELLOW}${TAGS_ARRAY[$i]}${NC}"
+    fi
+  done
+
+  echo -e "  0) ${YELLOW}Return to main menu${NC}"
+
+  while true; do
+    echo -ne "\nSelect version to downgrade to (number): "
+    read -r version_choice
+
+    if [[ "$version_choice" =~ ^[0-9]+$ ]]; then
+      if [ "$version_choice" -eq 0 ]; then
+        return
+      elif [ "$version_choice" -le ${#TAGS_ARRAY[@]} ]; then
+        SELECTED_VERSION="${TAGS_ARRAY[$((version_choice-1))]}"
+        break
+      fi
+    fi
+    echo -e "${RED}Invalid choice. Please enter a number between 0 and ${#TAGS_ARRAY[@]}.${NC}"
+  done
+
+  # Если выбрана опция "custom", запрашиваем версию вручную
+  if [ "$SELECTED_VERSION" == "custom" ]; then
+    echo -n "Enter custom version: "
+    read -r SELECTED_VERSION
+    while [[ -z "$SELECTED_VERSION" ]]; do
+      echo -n "Version cannot be empty. Enter again: "
+      read -r SELECTED_VERSION
+    done
+  fi
+
+  # Подтверждение действия
+  echo -e "\n${YELLOW}You are about to downgrade to version: ${BLUE}$SELECTED_VERSION${NC}"
+
+  if [ "$NODE_NAME" = "ALL" ]; then
+    echo -e "${YELLOW}This will affect ALL nodes.${NC}"
+  else
+    echo -e "${YELLOW}Node: ${BLUE}$NODE_NAME${NC}"
+  fi
+
+  echo -ne "${RED}Are you sure? [y/N]: ${NC}"
+  read -r confirm
+  if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    echo -e "${YELLOW}Operation canceled.${NC}"
+    return
+  fi
+
+  # Выполняем даунгрейд
+  if [ "$NODE_NAME" = "ALL" ]; then
+    echo -e "${YELLOW}Downgrading ALL nodes to version $SELECTED_VERSION...${NC}"
+    for dir in "$BASE_DIR"/*; do
+      [ -d "$dir" ] || continue
+      node_base_name=$(basename "$dir")
+      echo -e "${YELLOW}Processing $node_base_name...${NC}"
+
+      # Останавливаем контейнер
+      (cd "$dir" && docker compose down)
+
+      # Pull нужной версии
+      echo -e "${GREEN}Pulling image nexusxyz/nexus-cli:$SELECTED_VERSION...${NC}"
+      docker pull "nexusxyz/nexus-cli:$SELECTED_VERSION"
+
+      # Меняем версию в docker-compose.yml
+      sed -i "s|image: nexusxyz/nexus-cli:.*|image: nexusxyz/nexus-cli:$SELECTED_VERSION|" "$dir/docker-compose.yml"
+
+      # Запускаем контейнер
+      (cd "$dir" && docker compose up -d)
+      echo -e "${GREEN}Node $node_base_name downgraded to $SELECTED_VERSION${NC}"
+    done
+  else
+    NODE_DIR="$BASE_DIR/$NODE_NAME"
+    echo -e "${YELLOW}Downgrading $NODE_NAME to version $SELECTED_VERSION...${NC}"
+
+    # Останавливаем контейнер
+    (cd "$NODE_DIR" && docker compose down)
+
+    # Pull нужной версии
+    echo -e "${GREEN}Pulling image nexusxyz/nexus-cli:$SELECTED_VERSION...${NC}"
+    docker pull "nexusxyz/nexus-cli:$SELECTED_VERSION"
+
+    # Меняем версию в docker-compose.yml
+    sed -i "s|image: nexusxyz/nexus-cli:.*|image: nexusxyz/nexus-cli:$SELECTED_VERSION|" "$NODE_DIR/docker-compose.yml"
+
+    # Запускаем контейнер
+    (cd "$NODE_DIR" && docker compose up -d)
+    echo -e "${GREEN}Node $NODE_NAME downgraded to $SELECTED_VERSION${NC}"
+  fi
+
+  echo -e "${GREEN}✅ Downgrade completed successfully!${NC}"
 }
 
 stop_containers() {
@@ -686,10 +806,11 @@ while true; do
     5) remove_node ;;
     6) stop_containers ;;
     7) start_containers ;;
-    8) create_swap ;;
-    9) increase_ulimit ;;
+    8) downgrade_node ;;
+    9) create_swap ;;
+    10) increase_ulimit ;;
     0) echo "Exiting..."; exit 0 ;;
-    *) echo "Invalid input. Choose between 0 and 9." ;;
+    *) echo "Invalid input. Choose between 0 and 10." ;;
   esac
   echo ""
   echo -e "${YELLOW}Press Enter to continue...${NC}"

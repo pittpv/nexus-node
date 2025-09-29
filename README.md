@@ -31,25 +31,32 @@ When installing the node(s), the script will:
 
 > If Watchtower is already configured, the script will ask before overwriting.
 
-## 📌 Latest Updates 07-07-2025  
-⚠️ Delete nodes using the **old version** of the script and only then download the new version.
+## 📌 Latest Updates 29-09-2025  
+⚠️ On some machines, an issue occurs with node version 0.10.15. Please downgrade to version 0.10.14 using new feature
 
-- Added support for creating multiple Nexus nodes
-  - Batch loading of node IDs via the `nexus-nodes.txt` file or manually
-  - `--max-threads` setting
-  - Convenient node identification on the server—the node ID is added to the container name and folder
-- Added batch node management
-  - Delete all nodes at once or a specific one
-  - Start/stop all containers at once or a specific one
-  - Check and display container status (running ✅, stopped ❌)
-- New log viewing mechanism based on tmux. Thanks to **@leznoxx** (Discord) for the function idea
-  - View up to 4 containers on one screen (in one session). The number of sessions is unlimited.
-  - Supports navigation between tmux sessions when dealing with more nodes. One tmux session = 4 containers.
-  - Convenient usage instructions displayed right before launching log viewing. Exit log viewing with `Ctrl+B` then `D`.
-- Minor UX improvements
+- Added a downgrade feature (option 8)
+  - Downgrade of multiple nodes is supported
+  - Choose `lastest` to restore automatic updates.
 
 <details>
 <summary>📅 Version History</summary>
+
+### 07-07-2025
+⚠️ Delete nodes using the **old version** of the script and only then download the new version.
+
+- Added support for creating multiple Nexus nodes
+    - Batch loading of node IDs via the `nexus-nodes.txt` file or manually
+    - `--max-threads` setting
+    - Convenient node identification on the server—the node ID is added to the container name and folder
+- Added batch node management
+    - Delete all nodes at once or a specific one
+    - Start/stop all containers at once or a specific one
+    - Check and display container status (running ✅, stopped ❌)
+- New log viewing mechanism based on tmux. Thanks to **@leznoxx** (Discord) for the function idea
+    - View up to 4 containers on one screen (in one session). The number of sessions is unlimited.
+    - Supports navigation between tmux sessions when dealing with more nodes. One tmux session = 4 containers.
+    - Convenient usage instructions displayed right before launching log viewing. Exit log viewing with `Ctrl+B` then `D`.
+- Minor UX improvements
 
 ### 04-07-2025
 - Added a function to check machine resources and calculate recommended value for --max-threads parameter. Thanks to **@leznoxx** (Discord) for the function idea
