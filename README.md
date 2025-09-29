@@ -32,7 +32,7 @@ When installing the node(s), the script will:
 > If Watchtower is already configured, the script will ask before overwriting.
 
 ## 📌 Latest Updates 29-09-2025  
-⚠️ On some machines, an issue occurs with node version 0.10.15. Please downgrade to version 0.10.14 using new feature
+⚠️ On some machines, an issue occurs with node version 0.10.15 and 0.10.16 running via Docker. Please downgrade to version 0.10.14 using new feature
 
 - Added a downgrade feature (option 8)
   - Downgrade of multiple nodes is supported
@@ -42,8 +42,6 @@ When installing the node(s), the script will:
 <summary>📅 Version History</summary>
 
 ### 07-07-2025
-⚠️ Delete nodes using the **old version** of the script and only then download the new version.
-
 - Added support for creating multiple Nexus nodes
     - Batch loading of node IDs via the `nexus-nodes.txt` file or manually
     - `--max-threads` setting
